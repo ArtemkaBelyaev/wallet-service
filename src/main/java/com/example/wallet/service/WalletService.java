@@ -7,6 +7,7 @@ import com.example.wallet.entity.WalletTransaction;
 import com.example.wallet.exception.WalletExceptions;
 import com.example.wallet.repository.WalletRepository;
 import com.example.wallet.repository.WalletTransactionRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -16,8 +17,6 @@ import java.util.UUID;
 public class WalletService {
     @Autowired
     private WalletRepository walletRepository;
-    @Autowired
-    private WalletTransactionRepository transactionRepository;
     @Autowired
     private WalletTransactionRepository walletTransactionRepository;
 
@@ -40,9 +39,9 @@ public class WalletService {
         return new WalletBalanceResponse(wallet.getId(), wallet.getBalance());
     }
 
-
+    @Transactional
     public void processTransaction(WalletOperationRequest request) {
-        Wallet wallet = walletRepository.findById(request.getWalletId())
+        Wallet wallet = walletRepository.findByIdWithLock(request.getWalletId())
                 .orElseThrow(WalletExceptions.WalletNotFoundException::new);
         if (request.getAmount() <= 0) {
             throw new WalletExceptions.InvalidAmountException();
